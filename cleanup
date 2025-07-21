@@ -1,0 +1,35 @@
+#!/bin/bash
+
+trash_dir="/tmp/trash"
+log_file="$trash_dir/trash.log"
+temp_log="$trash_dir/trash.tmp"
+current_time=$(date +%s)
+
+touch "$temp_log"
+
+while IFS= read -r line; do
+  # Extract the trash path and timestamp from the JSON log line
+  trash_path=$(echo "$line" | sed -n 's/.*"trash":"\([^"]*\)".*/\1/p')
+  time_str=$(echo "$line" | sed -n 's/.*"time":"\([^"]*\)".*/\1/p')
+
+  # Convert timestamp string to Unix time (seconds since epoch)
+  timestamp=$(date -d "${time_str//_/ }" +%s 2>/dev/null)
+
+  if [[ -z "$timestamp" ]]; then
+    # Keep lines with invalid dates
+    echo "$line" >> "$temp_log"
+    continue
+  fi
+
+  age=$(( (current_time - timestamp) / 86400 )) # Age in days
+
+  if (( age >= 30 )); then
+    echo "Deleting: '$trash_path' (older than 30 days)"
+    rm -rf "$trash_path"
+  else
+    # Keep log entries for files not old enough
+    echo "$line" >> "$temp_log"
+  fi
+done < "$log_file"
+
+mv "$temp_log" "$log_file"

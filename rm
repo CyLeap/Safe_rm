@@ -1,0 +1,61 @@
+#!/bin/bash
+
+trash_dir="/tmp/trash"                    # Trash folder path
+log_file="$trash_dir/trash.log"           # Log file path
+mkdir -p "$trash_dir"                      # Create trash folder if missing
+touch "$log_file"                          # Create log file if missing
+
+usage() {
+    echo "Usage: rm [-r] file1 [file2 ...]"
+    exit 1
+}
+
+recursive=0
+targets=()
+
+# Parse command-line arguments
+while [[ "$1" != "" ]]; do
+    case "$1" in
+        -r)
+            recursive=1                      # Enable recursive deletion flag
+            ;;
+        -*)
+            echo "Error: unsupported flag $1"
+            usage
+            ;;
+        *)
+            targets+=("$1")                  # Collect target files/directories
+            ;;
+    esac
+    shift
+done
+
+if [[ ${#targets[@]} -eq 0 ]]; then
+    usage                              # Show usage if no target provided
+fi
+
+for item in "${targets[@]}"; do
+    if [[ ! -e "$item" ]]; then
+        echo "Error: '$item' not found"
+        continue                        # Skip missing files
+    fi
+
+    if [[ -d "$item" && $recursive -ne 1 ]]; then
+        echo "Error: '$item' is a directory. Use -r to remove directories."
+        continue
+    fi
+
+    timestamp=$(date +"%Y-%m-%d_%H-%M-%S")  # Timestamp per item to avoid duplicates
+    name=$(basename "$item")
+    safe_name="${name}_$timestamp"   # Append timestamp to avoid name clashes
+    trash_path="$trash_dir/$safe_name"
+
+    original_path=$(realpath "$item")   # Get original path BEFORE moving
+    mv "$item" "$trash_path"             # Move file or folder to trash
+
+    # Log deletion in JSON (original path, trash path, timestamp)
+    printf '{\n  "original": "%s",\n  "trash": "%s",\n  "time": "%s"\n}\n' \
+        "$original_path" "$trash_path" "$timestamp" >> "$log_file"
+
+    echo "Moved: '$item' -> '$trash_path'"
+done
