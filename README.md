@@ -1,4 +1,6 @@
-# Safe_rm Script
+# Safe_rm Script 
+
+## IDTB100015-ThayBunleap-ScriptProject
 
 ## Overview
 This project contains a custom shell script named `rm` that acts as a safer alternative to the standard `rm` command. Instead of permanently deleting files or directories, it moves them to a trash folder (`/tmp/trash`) and logs the deletion details.
