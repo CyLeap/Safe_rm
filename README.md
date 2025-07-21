@@ -59,3 +59,7 @@ bash rm -r myfolder
 
 - This script is intended as a safer alternative to `rm` by preventing permanent deletion.
 - The trash folder is located in `/tmp/trash`, which may be cleared on system reboot depending on your OS.
+
+## Link To Google Drive
+
+- https://drive.google.com/file/d/1r21S_JTrO2WPSC1APJ3u7OghrCAdASrd/view?usp=sharing
